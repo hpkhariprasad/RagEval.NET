@@ -21,10 +21,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.*" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\RagEval\RagEval.csproj" />
+    <ProjectReference Include="..\..\src\RagEval.Extensions.AI\RagEval.Extensions.AI.csproj" />
   </ItemGroup>
 
 </Project>

@@ -99,6 +99,55 @@ metric name (`"Faithfulness"`, `"AnswerRelevance"`, `"ContextPrecision"`, `"Cont
 
 Prefer plain OpenAI instead? Use `.UseOpenAI(apiKey, model)` in place of `.UseAzureOpenAI(...)`.
 
+## Using with Microsoft.Extensions.AI
+
+The optional `RagEval.Extensions.AI` package adapts any [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai)
+`IChatClient` into an `ILlmJudge`, so RagEval.NET can use Ollama, Mistral, Azure OpenAI, OpenAI,
+or any future provider that ships an `IChatClient` implementation — all through the same
+`RagEvaluatorBuilder`. The base `RagEval.NET` package has no dependency on Microsoft.Extensions.AI;
+you only pull it in if you want this flexibility.
+
+```bash
+dotnet add package RagEval.Extensions.AI
+```
+
+Local-first evaluation with [Ollama](https://learn.microsoft.com/dotnet/ai/quickstarts/quickstart-ollama)
+(also requires `dotnet add package OllamaSharp`, which implements `IChatClient` directly):
+
+```csharp
+using Microsoft.Extensions.AI;
+using OllamaSharp;
+using RagEval;
+using RagEval.Extensions.AI;
+
+IChatClient ollama = new OllamaApiClient(new Uri("http://localhost:11434"), "llama3.1");
+
+var evaluator = new RagEvaluatorBuilder()
+    .UseExtensionsAI(ollama)
+    .WithMaxConcurrency(5)
+    .Build();
+```
+
+Azure OpenAI via `IChatClient` (useful if you already have an `IChatClient` pipeline configured,
+e.g. with caching, logging, or telemetry middleware — also requires
+`dotnet add package Microsoft.Extensions.AI.OpenAI`, which provides the `AsIChatClient()` adapter):
+
+```csharp
+using Azure.AI.OpenAI;
+using Microsoft.Extensions.AI;
+using RagEval;
+using RagEval.Extensions.AI;
+
+IChatClient chatClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey))
+    .GetChatClient(deploymentName)
+    .AsIChatClient();
+
+var evaluator = new RagEvaluatorBuilder()
+    .UseExtensionsAI(chatClient)
+    .WithMaxConcurrency(5)
+    .Build();
+```
+
 ## Batch evaluation
 
 ```csharp

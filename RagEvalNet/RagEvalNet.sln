@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RagEval.Tests", "tests\RagE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RagEval.Samples", "samples\RagEval.Samples\RagEval.Samples.csproj", "{5227D6F1-7415-43F6-A5F1-5C228F34B6FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RagEval.Extensions.AI", "src\RagEval.Extensions.AI\RagEval.Extensions.AI.csproj", "{EDDA1D54-E60E-4A17-85D8-5D3A01ABB623}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5227D6F1-7415-43F6-A5F1-5C228F34B6FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5227D6F1-7415-43F6-A5F1-5C228F34B6FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5227D6F1-7415-43F6-A5F1-5C228F34B6FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDDA1D54-E60E-4A17-85D8-5D3A01ABB623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDDA1D54-E60E-4A17-85D8-5D3A01ABB623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDDA1D54-E60E-4A17-85D8-5D3A01ABB623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDDA1D54-E60E-4A17-85D8-5D3A01ABB623}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
