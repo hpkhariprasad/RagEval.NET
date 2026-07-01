@@ -1,7 +1,6 @@
 # RagEval.NET
 
-<!-- replace with your GitHub username -->
-[![codecov](https://codecov.io/gh/YOUR_GITHUB_USERNAME/rageval-net/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_GITHUB_USERNAME/rageval-net)
+[![codecov](https://codecov.io/gh/hpkhariprasad/rageval-net/branch/main/graph/badge.svg)](https://codecov.io/gh/hpkhariprasad/rageval-net)
 
 RagEval.NET is a .NET 8 library for evaluating the **output quality** of Retrieval-Augmented
 Generation (RAG) pipelines. It uses an LLM-as-judge pattern — a language model scores a
