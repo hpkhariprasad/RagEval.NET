@@ -28,6 +28,26 @@ relevance, context precision/recall) in the Python ecosystem. RagEval.NET implem
 core metrics natively for .NET, with first-class Azure OpenAI support, async/await throughout,
 and a fluent builder API idiomatic to .NET — no Python interop required.
 
+## How It Compares to Python RAGAS
+
+| Feature                  | RagEval.NET  | Python RAGAS |
+|--------------------------|--------------|--------------|
+| Language                 | .NET 8 (C#)  | Python       |
+| Azure OpenAI native      | ✅           | Partial      |
+| Semantic Kernel fit      | ✅           | ❌           |
+| M.Extensions.AI support  | ✅           | ❌           |
+| LLM-as-judge             | ✅           | ✅           |
+| Metrics (core 4)         | ✅           | ✅           |
+| CI threshold assertions  | ✅           | ❌           |
+| JSON/CSV export          | ✅           | ❌           |
+
+RagEval.NET does not aim to replicate every RAGAS feature. It focuses on the four metrics most
+critical to production RAG quality and adds .NET-native features — Microsoft.Extensions.AI
+compatibility and deep Azure OpenAI integration — that Python RAGAS cannot offer in a .NET
+pipeline. CI threshold assertions (see [CI Pipeline Integration](#ci-pipeline-integration)) and
+structured export (see [Export results](#export-results)) already ship today, not as a roadmap
+item.
+
 ## Installation
 
 ```bash

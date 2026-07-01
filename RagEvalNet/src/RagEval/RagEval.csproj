@@ -6,22 +6,35 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>RagEval.NET</PackageId>
     <Version>1.0.0</Version>
-    <Authors>hpkhariprasad</Authors>
+    <Authors>Hari Prasad</Authors>
     <Description>
-      RAG pipeline evaluation for .NET — LLM-as-judge scoring for
-      Faithfulness, Answer Relevance, Context Precision, and Context Recall.
-      The evaluation counterpart to RAG pipeline libraries like RAGSharp and
-      Semantic Kernel.
+      RAG pipeline evaluation for .NET 8. LLM-as-judge scoring across four
+      RAGAS-inspired metrics: Faithfulness, Answer Relevance, Context Precision,
+      and Context Recall. Works with Azure OpenAI and OpenAI. Designed for
+      Semantic Kernel, RAGSharp, Kernel Memory, and any .NET RAG pipeline.
+      The evaluation layer your RAG pipeline is missing.
     </Description>
-    <PackageTags>rag;evaluation;llm;azure-openai;semantic-kernel;ragas;ai</PackageTags>
+    <PackageTags>rag;evaluation;llm;azure-openai;openai;semantic-kernel;ragas;ai;dotnet;evalops</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/hpkhariprasad/RagEval.NET</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/hpkhariprasad/RagEval.NET</PackageProjectUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RootNamespace>RagEval</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="2.*" />
     <PackageReference Include="OpenAI" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\assets\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
