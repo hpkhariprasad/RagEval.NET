@@ -8,6 +8,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: nuget-publish        # Must match the environment name on NuGet trusted publishing config
     permissions:
       id-token: write
 
