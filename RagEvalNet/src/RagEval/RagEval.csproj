@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PackageId>RagEval.NET</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>hpkhariprasad</Authors>
+    <Description>
+      RAG pipeline evaluation for .NET — LLM-as-judge scoring for
+      Faithfulness, Answer Relevance, Context Precision, and Context Recall.
+      The evaluation counterpart to RAG pipeline libraries like RAGSharp and
+      Semantic Kernel.
+    </Description>
+    <PackageTags>rag;evaluation;llm;azure-openai;semantic-kernel;ragas;ai</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <RootNamespace>RagEval</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.*" />
+    <PackageReference Include="OpenAI" Version="2.*" />
+  </ItemGroup>
+
+</Project>
