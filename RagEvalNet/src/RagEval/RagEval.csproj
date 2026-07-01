@@ -25,6 +25,8 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RootNamespace>RagEval</RootNamespace>
+<Authors>Hari Prasad Kasavajjala</Authors>
+<Copyright>Copyright © 2026 Hari Prasad Kasavajjala</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
