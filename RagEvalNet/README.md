@@ -1,5 +1,8 @@
 # RagEval.NET
 
+<!-- replace with your GitHub username -->
+[![codecov](https://codecov.io/gh/YOUR_GITHUB_USERNAME/rageval-net/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_GITHUB_USERNAME/rageval-net)
+
 RagEval.NET is a .NET 8 library for evaluating the **output quality** of Retrieval-Augmented
 Generation (RAG) pipelines. It uses an LLM-as-judge pattern — a language model scores a
 question, an answer, and the retrieved context chunks against four RAG-specific metrics and
@@ -159,6 +162,10 @@ Contributions are welcome.
 5. Add or update tests for any behavioral change — metric evaluators are tested against a
    mocked `ILlmJudge`, so no real API calls are needed to run the test suite.
 6. Open a pull request describing the change and why it's needed.
+
+## CI Setup
+
+CI runs tests with code coverage and uploads results to Codecov; to enable this on a fork, generate a repository upload token at [codecov.io](https://codecov.io) (after linking the repo there) and add it as a `CODECOV_TOKEN` secret under the repo's GitHub Settings → Secrets and variables → Actions.
 
 ## License
 
