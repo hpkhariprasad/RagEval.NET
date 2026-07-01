@@ -118,6 +118,33 @@ so you can stay within your Azure OpenAI or OpenAI rate limits.
 See [`samples/RagEval.Samples/BasicEvaluation.cs`](samples/RagEval.Samples/BasicEvaluation.cs)
 for a full runnable example.
 
+## Export results
+
+Batch results can be written to disk as JSON or CSV via the `ExportAsync` extension method on
+`IReadOnlyList<RagEvaluationResult>`. The destination directory is created automatically if it
+doesn't already exist.
+
+```csharp
+using RagEval.Export;
+
+// JSON (default) — a pretty-printed array of full result objects, including reasoning.
+await results.ExportAsync("output/results.json");
+
+// CSV — one row per result, with a fixed set of columns for spreadsheet analysis.
+await results.ExportAsync("output/results.csv", RagEvalExportFormat.Csv);
+```
+
+The CSV format has the header row:
+
+```
+Question,Answer,Faithfulness,AnswerRelevance,ContextPrecision,ContextRecall,FaithfulnessReasoning,AnswerRelevanceReasoning,ContextPrecisionReasoning,ContextRecallReasoning
+```
+
+Null scores (e.g. `ContextRecall` when no `GroundTruth` was supplied) are exported as an empty
+field in CSV and as JSON `null` in the JSON format. To export directly with a specific format,
+use `JsonRagEvalExporter` or `CsvRagEvalExporter` (both implement `IRagEvalExporter`) instead of
+the extension method.
+
 ## Contributing
 
 Contributions are welcome.
