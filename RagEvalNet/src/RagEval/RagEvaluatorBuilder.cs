@@ -1,5 +1,6 @@
 using RagEval.Judges;
 using RagEval.Metrics;
+using RagEval.Models;
 
 namespace RagEval;
 
@@ -11,6 +12,7 @@ public sealed class RagEvaluatorBuilder
     private ILlmJudge? _judge;
     private string? _judgeModel;
     private int _maxConcurrency = 3;
+    private EvaluationThresholds? _thresholds;
 
     /// <summary>Configures the evaluator to use Azure OpenAI as the judge LLM.</summary>
     /// <param name="endpoint">The Azure OpenAI resource endpoint, e.g. https://my-resource.openai.azure.com/.</param>
@@ -63,6 +65,37 @@ public sealed class RagEvaluatorBuilder
         return this;
     }
 
+    /// <summary>
+    /// Configures the minimum acceptable score for each metric, enabling
+    /// <see cref="RagEvaluator.EvaluateAndAssertAsync"/> and <see cref="RagEvaluator.EvaluateBatchAndAssertAsync"/>.
+    /// </summary>
+    public RagEvaluatorBuilder WithThresholds(EvaluationThresholds thresholds)
+    {
+        _thresholds = thresholds ?? throw new ArgumentNullException(nameof(thresholds));
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the minimum acceptable score for each metric, enabling
+    /// <see cref="RagEvaluator.EvaluateAndAssertAsync"/> and <see cref="RagEvaluator.EvaluateBatchAndAssertAsync"/>.
+    /// A null argument leaves the corresponding metric unchecked.
+    /// </summary>
+    public RagEvaluatorBuilder WithThresholds(
+        double? faithfulness = null,
+        double? answerRelevance = null,
+        double? contextPrecision = null,
+        double? contextRecall = null)
+    {
+        _thresholds = new EvaluationThresholds
+        {
+            Faithfulness = faithfulness,
+            AnswerRelevance = answerRelevance,
+            ContextPrecision = contextPrecision,
+            ContextRecall = contextRecall
+        };
+        return this;
+    }
+
     /// <summary>Builds the configured <see cref="RagEvaluator"/>.</summary>
     /// <exception cref="InvalidOperationException">No judge was configured.</exception>
     public RagEvaluator Build()
@@ -81,6 +114,6 @@ public sealed class RagEvaluatorBuilder
             new ContextRecallEvaluator()
         ];
 
-        return new RagEvaluator(_judge, metricEvaluators, _maxConcurrency, _judgeModel);
+        return new RagEvaluator(_judge, metricEvaluators, _maxConcurrency, _judgeModel, _thresholds);
     }
 }

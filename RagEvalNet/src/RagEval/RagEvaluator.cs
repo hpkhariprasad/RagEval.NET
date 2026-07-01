@@ -1,3 +1,4 @@
+using RagEval.Exceptions;
 using RagEval.Judges;
 using RagEval.Metrics;
 using RagEval.Models;
@@ -11,19 +12,29 @@ namespace RagEval;
 /// </summary>
 public sealed class RagEvaluator
 {
+    private const string NoThresholdsMessage =
+        "No thresholds configured. Call WithThresholds() on the builder before using EvaluateAndAssertAsync.";
+
     private readonly ILlmJudge _judge;
     private readonly IReadOnlyList<IMetricEvaluator> _metricEvaluators;
     private readonly SemaphoreSlim _concurrencyLimiter;
+    private readonly EvaluationThresholds? _thresholds;
 
     /// <summary>The judge model name configured via <see cref="RagEvaluatorBuilder.WithJudgeModel"/>, if any.</summary>
     public string? JudgeModel { get; }
 
-    internal RagEvaluator(ILlmJudge judge, IReadOnlyList<IMetricEvaluator> metricEvaluators, int maxConcurrency, string? judgeModel)
+    internal RagEvaluator(
+        ILlmJudge judge,
+        IReadOnlyList<IMetricEvaluator> metricEvaluators,
+        int maxConcurrency,
+        string? judgeModel,
+        EvaluationThresholds? thresholds = null)
     {
         _judge = judge;
         _metricEvaluators = metricEvaluators;
         _concurrencyLimiter = new SemaphoreSlim(maxConcurrency, maxConcurrency);
         JudgeModel = judgeModel;
+        _thresholds = thresholds;
     }
 
     /// <summary>
@@ -77,6 +88,65 @@ public sealed class RagEvaluator
         return results;
     }
 
+    /// <summary>
+    /// Scores a single input and throws <see cref="EvaluationThresholdException"/> if any metric
+    /// with a configured threshold falls below it. Metrics without a configured threshold are not checked.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No thresholds were configured via <see cref="RagEvaluatorBuilder.WithThresholds(EvaluationThresholds)"/>.</exception>
+    /// <exception cref="EvaluationThresholdException">One or more metric scores fell below their configured threshold.</exception>
+    public async Task<RagEvaluationResult> EvaluateAndAssertAsync(RagEvaluationInput input, CancellationToken ct = default)
+    {
+        if (_thresholds is null)
+        {
+            throw new InvalidOperationException(NoThresholdsMessage);
+        }
+
+        RagEvaluationResult result = await EvaluateAsync(input, ct).ConfigureAwait(false);
+
+        Dictionary<string, (double Required, double Actual)> failures = CollectFailures(result, _thresholds);
+        if (failures.Count > 0)
+        {
+            throw new EvaluationThresholdException(result, _thresholds, failures);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Scores a batch of inputs and throws an <see cref="AggregateException"/> containing one
+    /// <see cref="EvaluationThresholdException"/> for each result that fell below a configured threshold.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No thresholds were configured via <see cref="RagEvaluatorBuilder.WithThresholds(EvaluationThresholds)"/>.</exception>
+    /// <exception cref="AggregateException">One or more results fell below their configured thresholds.</exception>
+    public async Task<IReadOnlyList<RagEvaluationResult>> EvaluateBatchAndAssertAsync(IEnumerable<RagEvaluationInput> inputs, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(inputs);
+
+        if (_thresholds is null)
+        {
+            throw new InvalidOperationException(NoThresholdsMessage);
+        }
+
+        IReadOnlyList<RagEvaluationResult> results = await EvaluateBatchAsync(inputs.ToList(), ct).ConfigureAwait(false);
+
+        List<EvaluationThresholdException> failures = [];
+        foreach (RagEvaluationResult result in results)
+        {
+            Dictionary<string, (double Required, double Actual)> resultFailures = CollectFailures(result, _thresholds);
+            if (resultFailures.Count > 0)
+            {
+                failures.Add(new EvaluationThresholdException(result, _thresholds, resultFailures));
+            }
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new AggregateException(failures);
+        }
+
+        return results;
+    }
+
     private async Task<(string MetricName, MetricEvaluationOutcome Outcome)> EvaluateMetricAsync(
         IMetricEvaluator evaluator, RagEvaluationInput input, CancellationToken ct)
     {
@@ -89,6 +159,32 @@ public sealed class RagEvaluator
         finally
         {
             _concurrencyLimiter.Release();
+        }
+    }
+
+    private static Dictionary<string, (double Required, double Actual)> CollectFailures(RagEvaluationResult result, EvaluationThresholds thresholds)
+    {
+        Dictionary<string, (double Required, double Actual)> failures = [];
+
+        CheckThreshold(failures, MetricNames.Faithfulness, thresholds.Faithfulness, result.Faithfulness);
+        CheckThreshold(failures, MetricNames.AnswerRelevance, thresholds.AnswerRelevance, result.AnswerRelevance);
+        CheckThreshold(failures, MetricNames.ContextPrecision, thresholds.ContextPrecision, result.ContextPrecision);
+        CheckThreshold(failures, MetricNames.ContextRecall, thresholds.ContextRecall, result.ContextRecall);
+
+        return failures;
+    }
+
+    private static void CheckThreshold(
+        Dictionary<string, (double Required, double Actual)> failures, string metricName, double? required, double? actual)
+    {
+        if (required is null)
+        {
+            return;
+        }
+
+        if (actual is null || actual.Value < required.Value)
+        {
+            failures[metricName] = (required.Value, actual ?? double.NaN);
         }
     }
 }

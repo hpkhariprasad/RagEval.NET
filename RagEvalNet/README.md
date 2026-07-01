@@ -148,6 +148,52 @@ field in CSV and as JSON `null` in the JSON format. To export directly with a sp
 use `JsonRagEvalExporter` or `CsvRagEvalExporter` (both implement `IRagEvalExporter`) instead of
 the extension method.
 
+## CI Pipeline Integration
+
+Configure minimum acceptable scores with `WithThresholds`, then use `EvaluateAndAssertAsync` (or
+`EvaluateBatchAndAssertAsync`) in a `dotnet test` run to fail the build when RAG output quality
+regresses below your bar. Metrics with no configured threshold are still scored but never cause
+a failure, and a `null` score (e.g. a judge parse failure, or `ContextRecall` with no
+`GroundTruth`) always fails a metric that does have a threshold set.
+
+```csharp
+using RagEval;
+using RagEval.Exceptions;
+
+var evaluator = new RagEvaluatorBuilder()
+    .UseAzureOpenAI(endpoint, apiKey, deploymentName)
+    .WithThresholds(faithfulness: 0.8, answerRelevance: 0.7, contextPrecision: 0.6)
+    .Build();
+
+// e.g. inside an xUnit [Fact] that runs as part of CI:
+await evaluator.EvaluateAndAssertAsync(input);
+```
+
+`EvaluateAndAssertAsync` throws `EvaluationThresholdException` when one or more metrics fall
+short; its `Failures` dictionary lists the required vs. actual score for each failed metric, and
+its `Message` spells them out (e.g. `"Faithfulness below threshold: required 0.80, actual 0.62"`).
+`EvaluateBatchAndAssertAsync` throws an `AggregateException` containing one
+`EvaluationThresholdException` per failing result in the batch:
+
+```csharp
+try
+{
+    await evaluator.EvaluateBatchAndAssertAsync(inputs);
+}
+catch (AggregateException ex)
+{
+    foreach (EvaluationThresholdException failure in ex.InnerExceptions.Cast<EvaluationThresholdException>())
+    {
+        Console.WriteLine(failure.Message);
+    }
+
+    throw;
+}
+```
+
+Calling either method without first configuring thresholds via `WithThresholds` throws
+`InvalidOperationException`.
+
 ## Contributing
 
 Contributions are welcome.
