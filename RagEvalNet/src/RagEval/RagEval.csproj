@@ -8,6 +8,7 @@
     <Version>1.0.0</Version>
     <Authors>Hari Prasad Kasavajjala</Authors>
     <Copyright>Copyright © 2026 Hari Prasad Kasavajjala</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>
       RAG pipeline evaluation for .NET 8. LLM-as-judge scoring across four
       RAGAS-inspired metrics: Faithfulness, Answer Relevance, Context Precision,
