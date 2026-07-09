@@ -222,18 +222,68 @@ doesn't already exist.
 ```csharp
 using RagEval.Export;
 
-// JSON (default) — a pretty-printed array of full result objects, including reasoning.
+// JSON (default) — a versioned document with summary scores and full result objects.
 await results.ExportAsync("output/results.json");
 
 // CSV — one row per result, with a fixed set of columns for spreadsheet analysis.
 await results.ExportAsync("output/results.csv", RagEvalExportFormat.Csv);
 ```
 
+### JSON schema (v1.0)
+
+The JSON export is a stable, versioned, camelCase document designed for dashboards and other
+downstream tooling to build on:
+
+```json
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-07-09T18:30:00.0000000+00:00",
+  "summary": {
+    "avgFaithfulness": 0.92,
+    "avgAnswerRelevance": 0.88,
+    "avgContextPrecision": 0.75,
+    "avgContextRecall": null,
+    "totalEvaluated": 25
+  },
+  "results": [
+    {
+      "faithfulness": 1.0,
+      "answerRelevance": 0.93,
+      "contextPrecision": 0.5,
+      "contextRecall": null,
+      "reasoning": { "Faithfulness": "All claims supported.", "...": "..." },
+      "input": {
+        "question": "What is the notice period for termination?",
+        "answer": "The notice period is 30 days.",
+        "contexts": ["...clause 12.1...", "...clause 12.2..."],
+        "groundTruth": null
+      }
+    }
+  ]
+}
+```
+
+- `schemaVersion` follows a major.minor scheme: additive changes (new fields) bump the minor
+  version; renamed or removed fields bump the major version. Consumers should tolerate unknown
+  fields.
+- `generatedAt` is the UTC export timestamp in ISO 8601 format.
+- `summary` averages each metric across all results with a non-null score, or is `null` when no
+  result has one.
+- `reasoning` is keyed by metric name exactly as reported by the evaluator (`"Faithfulness"`,
+  `"AnswerRelevance"`, `"ContextPrecision"`, `"ContextRecall"`).
+
+The current schema version is exposed programmatically as `RagEvalExportSchema.JsonSchemaVersion`.
+
+### CSV schema (v1.0)
+
 The CSV format has the header row:
 
 ```
 Question,Answer,Faithfulness,AnswerRelevance,ContextPrecision,ContextRecall,FaithfulnessReasoning,AnswerRelevanceReasoning,ContextPrecisionReasoning,ContextRecallReasoning
 ```
+
+The column set is versioned (`RagEvalExportSchema.CsvSchemaVersion`): new columns are only ever
+appended after the existing ones, so column positions are stable.
 
 Null scores (e.g. `ContextRecall` when no `GroundTruth` was supplied) are exported as an empty
 field in CSV and as JSON `null` in the JSON format. To export directly with a specific format,

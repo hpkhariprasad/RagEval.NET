@@ -7,7 +7,9 @@ namespace RagEval.Export;
 
 /// <summary>
 /// Exports batch evaluation results as CSV, with one row per result. Null metric scores are
-/// exported as an empty field.
+/// exported as an empty field. The column set is versioned via
+/// <see cref="RagEvalExportSchema.CsvSchemaVersion"/>: new columns are only ever appended after
+/// the existing ones, so column positions are stable for downstream consumers.
 /// </summary>
 public sealed class CsvRagEvalExporter : IRagEvalExporter
 {
