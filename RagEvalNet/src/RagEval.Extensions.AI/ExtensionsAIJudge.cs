@@ -5,8 +5,8 @@ namespace RagEval.Extensions.AI;
 
 /// <summary>
 /// <see cref="ILlmJudge"/> implementation backed by any Microsoft.Extensions.AI <see cref="IChatClient"/>,
-/// allowing RagEval.NET to use Ollama, Mistral, Azure OpenAI, OpenAI, or any other provider that has an
-/// <see cref="IChatClient"/> implementation as the evaluation judge.
+/// allowing RagEval.NET to use Anthropic Claude, Azure OpenAI, OpenAI, Ollama, Mistral, or any other
+/// provider that has an <see cref="IChatClient"/> implementation as the evaluation judge.
 /// </summary>
 public sealed class ExtensionsAIJudge : ILlmJudge
 {

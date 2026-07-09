@@ -1,5 +1,6 @@
 # RagEval.NET
 
+
 [![codecov](https://codecov.io/gh/hpkhariprasad/rageval-net/branch/main/graph/badge.svg)](https://codecov.io/gh/hpkhariprasad/rageval-net)
 
 RagEval.NET is a .NET 8 library for evaluating the **output quality** of Retrieval-Augmented
@@ -121,14 +122,37 @@ Prefer plain OpenAI instead? Use `.UseOpenAI(apiKey, model)` in place of `.UseAz
 ## Using with Microsoft.Extensions.AI
 
 The optional `RagEval.Extensions.AI` package adapts any [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai)
-`IChatClient` into an `ILlmJudge`, so RagEval.NET can use Ollama, Mistral, Azure OpenAI, OpenAI,
-or any future provider that ships an `IChatClient` implementation — all through the same
-`RagEvaluatorBuilder`. The base `RagEval.NET` package has no dependency on Microsoft.Extensions.AI;
-you only pull it in if you want this flexibility.
+`IChatClient` into an `ILlmJudge`, so RagEval.NET can use Anthropic Claude, Azure OpenAI, OpenAI,
+Ollama, Mistral, or any future provider that ships an `IChatClient` implementation — all through
+the same `RagEvaluatorBuilder`. The base `RagEval.NET` package has no dependency on
+Microsoft.Extensions.AI; you only pull it in if you want this flexibility.
 
 ```bash
 dotnet add package RagEval.Extensions.AI
 ```
+
+Anthropic Claude as the judge, via the official [Anthropic C# SDK](https://www.nuget.org/packages/Anthropic)
+(also requires `dotnet add package Anthropic`, which ships an `AsIChatClient()` adapter):
+
+```csharp
+using Anthropic;
+using Microsoft.Extensions.AI;
+using RagEval;
+using RagEval.Extensions.AI;
+
+// Reads the ANTHROPIC_API_KEY environment variable.
+IChatClient claude = new AnthropicClient().AsIChatClient("claude-opus-4-8");
+
+var evaluator = new RagEvaluatorBuilder()
+    .UseExtensionsAI(claude)
+    .WithJudgeModel("claude-opus-4-8")
+    .WithMaxConcurrency(5)
+    .Build();
+```
+
+`claude-opus-4-8` is Anthropic's most capable Opus-tier model and makes an excellent judge; for
+high-volume evaluation runs, `claude-sonnet-5` offers near-Opus quality at lower cost, and
+`claude-haiku-4-5` is the fastest and cheapest option.
 
 Local-first evaluation with [Ollama](https://learn.microsoft.com/dotnet/ai/quickstarts/quickstart-ollama)
 (also requires `dotnet add package OllamaSharp`, which implements `IChatClient` directly):

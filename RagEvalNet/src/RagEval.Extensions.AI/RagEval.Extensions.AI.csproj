@@ -8,9 +8,10 @@
     <Version>1.0.0</Version>
     <Authors>hpkhariprasad</Authors>
     <Description>
-      Microsoft.Extensions.AI adapter for RagEval.NET — use any IChatClient as the evaluation judge.
+      Microsoft.Extensions.AI adapter for RagEval.NET — use any IChatClient as the evaluation judge,
+      including Anthropic Claude, Azure OpenAI, OpenAI, and Ollama.
     </Description>
-    <PackageTags>rag;evaluation;llm;microsoft-extensions-ai;ollama;ai</PackageTags>
+    <PackageTags>rag;evaluation;llm;microsoft-extensions-ai;anthropic;claude;ollama;ai</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>RagEval.Extensions.AI</RootNamespace>
