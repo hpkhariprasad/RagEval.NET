@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   works as the LLM judge with zero custom code.
 - README section on Microsoft.Extensions.AI usage, including an Anthropic Claude example
   built on the official Anthropic C# SDK's `AsIChatClient()` adapter.
+- Versioned, documented export schemas: the JSON export now emits a stable camelCase
+  `RagEvalJsonExport` document (`schemaVersion`, `generatedAt`, `summary`, `results`), and the
+  CSV column set is versioned with an append-only guarantee. Current versions are exposed via
+  `RagEvalExportSchema`.
+
+### Changed
+
+- **Breaking (JSON export):** `JsonRagEvalExporter` no longer writes a bare PascalCase array of
+  results; it writes the versioned camelCase envelope described in the README (schema v1.0).
 
 ## [1.0.0] - 2026-07-01
 

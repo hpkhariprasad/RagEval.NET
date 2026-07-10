@@ -4,14 +4,16 @@ using RagEval.Models;
 namespace RagEval.Export;
 
 /// <summary>
-/// Exports batch evaluation results as a pretty-printed JSON array using <see cref="JsonSerializer"/>.
-/// Null metric scores are serialized as JSON <c>null</c>.
+/// Exports batch evaluation results as a pretty-printed, camelCase <see cref="RagEvalJsonExport"/>
+/// document carrying a <c>schemaVersion</c> field, a generation timestamp, aggregate summary
+/// scores, and the individual results. Null metric scores are serialized as JSON <c>null</c>.
 /// </summary>
 public sealed class JsonRagEvalExporter : IRagEvalExporter
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
-        WriteIndented = true
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     /// <inheritdoc />
@@ -22,7 +24,15 @@ public sealed class JsonRagEvalExporter : IRagEvalExporter
 
         RagEvalExportFileHelper.EnsureDirectoryExists(filePath);
 
-        string json = JsonSerializer.Serialize(results, SerializerOptions);
+        var export = new RagEvalJsonExport
+        {
+            SchemaVersion = RagEvalExportSchema.JsonSchemaVersion,
+            GeneratedAt = DateTimeOffset.UtcNow,
+            Summary = results.GetSummary(),
+            Results = results
+        };
+
+        string json = JsonSerializer.Serialize(export, SerializerOptions);
 
         await using StreamWriter writer = new(filePath, append: false);
         await writer.WriteAsync(json.AsMemory(), ct).ConfigureAwait(false);

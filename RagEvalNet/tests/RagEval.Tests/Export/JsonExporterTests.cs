@@ -29,7 +29,7 @@ public class JsonExporterTests
         Path.Combine(Path.GetTempPath(), $"rageval-tests-{Guid.NewGuid():N}.{extension}");
 
     [Fact]
-    public async Task ExportAsync_WritesJsonArrayWithResultProperties()
+    public async Task ExportAsync_WritesVersionedEnvelopeWithResultProperties()
     {
         string path = GetTempFilePath("json");
         try
@@ -42,13 +42,45 @@ public class JsonExporterTests
             string json = await File.ReadAllTextAsync(path);
             using JsonDocument document = JsonDocument.Parse(json);
 
-            Assert.Equal(JsonValueKind.Array, document.RootElement.ValueKind);
-            Assert.Equal(1, document.RootElement.GetArrayLength());
+            JsonElement root = document.RootElement;
+            Assert.Equal(RagEvalExportSchema.JsonSchemaVersion, root.GetProperty("schemaVersion").GetString());
+            Assert.True(root.TryGetProperty("generatedAt", out JsonElement generatedAt));
+            Assert.NotEqual(default, generatedAt.GetDateTimeOffset());
 
-            JsonElement first = document.RootElement[0];
-            Assert.Equal(0.75, first.GetProperty("Faithfulness").GetDouble());
-            Assert.Equal(0.9, first.GetProperty("AnswerRelevance").GetDouble());
-            Assert.Equal("30 days.", first.GetProperty("Input").GetProperty("Answer").GetString());
+            JsonElement resultsElement = root.GetProperty("results");
+            Assert.Equal(JsonValueKind.Array, resultsElement.ValueKind);
+            Assert.Equal(1, resultsElement.GetArrayLength());
+
+            JsonElement first = resultsElement[0];
+            Assert.Equal(0.75, first.GetProperty("faithfulness").GetDouble());
+            Assert.Equal(0.9, first.GetProperty("answerRelevance").GetDouble());
+            Assert.Equal("30 days.", first.GetProperty("input").GetProperty("answer").GetString());
+            Assert.Equal("All claims supported.", first.GetProperty("reasoning").GetProperty("Faithfulness").GetString());
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task ExportAsync_WritesSummaryAveragedAcrossResults()
+    {
+        string path = GetTempFilePath("json");
+        try
+        {
+            IReadOnlyList<RagEvaluationResult> results = [CreateResult(faithfulness: 0.5), CreateResult(faithfulness: 1.0)];
+
+            var exporter = new JsonRagEvalExporter();
+            await exporter.ExportAsync(results, path);
+
+            string json = await File.ReadAllTextAsync(path);
+            using JsonDocument document = JsonDocument.Parse(json);
+
+            JsonElement summary = document.RootElement.GetProperty("summary");
+            Assert.Equal(0.75, summary.GetProperty("avgFaithfulness").GetDouble());
+            Assert.Equal(2, summary.GetProperty("totalEvaluated").GetInt32());
+            Assert.Equal(JsonValueKind.Null, summary.GetProperty("avgContextRecall").ValueKind);
         }
         finally
         {
@@ -70,11 +102,10 @@ public class JsonExporterTests
             string json = await File.ReadAllTextAsync(path);
             using JsonDocument document = JsonDocument.Parse(json);
 
-            JsonElement contextRecall = document.RootElement[0].GetProperty("ContextRecall");
-            JsonElement faithfulness = document.RootElement[0].GetProperty("Faithfulness");
+            JsonElement first = document.RootElement.GetProperty("results")[0];
 
-            Assert.Equal(JsonValueKind.Null, contextRecall.ValueKind);
-            Assert.Equal(JsonValueKind.Null, faithfulness.ValueKind);
+            Assert.Equal(JsonValueKind.Null, first.GetProperty("contextRecall").ValueKind);
+            Assert.Equal(JsonValueKind.Null, first.GetProperty("faithfulness").ValueKind);
         }
         finally
         {
@@ -118,7 +149,7 @@ public class JsonExporterTests
             string json = await File.ReadAllTextAsync(path);
             using JsonDocument document = JsonDocument.Parse(json);
 
-            Assert.Equal(JsonValueKind.Array, document.RootElement.ValueKind);
+            Assert.True(document.RootElement.TryGetProperty("schemaVersion", out _));
         }
         finally
         {
