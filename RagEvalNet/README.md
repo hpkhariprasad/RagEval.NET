@@ -336,6 +336,111 @@ catch (AggregateException ex)
 Calling either method without first configuring thresholds via `WithThresholds` throws
 `InvalidOperationException`.
 
+### Fluent threshold assertions
+
+For batch results you already have in hand, the `RagEval.Assertions` namespace adds a fluent
+`Assert` API — write each quality bar as an ordinary expression and get a rich, CI-log-friendly
+diff when one fails:
+
+```csharp
+using RagEval.Assertions;
+
+IReadOnlyList<RagEvaluationResult> results = await evaluator.EvaluateBatchAsync(inputs);
+
+// Per-result assertions: every result must satisfy every condition.
+results.Assert(
+    m => m.Faithfulness >= 0.8,
+    m => m.AnswerRelevance >= 0.7);
+
+// Summary assertions: gate on batch averages instead.
+results.GetSummary().Assert(s => s.AvgFaithfulness >= 0.85);
+```
+
+A failing assertion throws `RagEvalAssertionException`. Its message diffs the expected condition
+against the actual scores of every failing result — which assertion failed, which passed, the
+actual value of each metric the assertion references, and the question of each failing result —
+so a CI failure is diagnosable from the log alone:
+
+```
+RAG quality assertion failed: 1 of 2 assertion(s) failed across 25 result(s).
+
+FAILED  m => (m.Faithfulness >= 0.8)
+        2 of 25 result(s) failed:
+        - result[4]: Faithfulness = 0.62 | Q: "What is the notice period for termination?"
+        - result[11]: Faithfulness = N/A (no score) | Q: "Which clause covers renewals?"
+
+PASSED  m => (m.AnswerRelevance >= 0.7)
+```
+
+A `null` score (judge parse failure, or `ContextRecall` without a `GroundTruth`) fails any
+comparison it appears in, so unscored metrics can never pass silently. The exception also exposes
+the failures programmatically via `Failures`, `PassedAssertions`, and `TotalResults`.
+
+### GitHub Actions: fail the build if RAG quality regresses
+
+Wrap the assertions in an xUnit fact and run it as a quality gate:
+
+```csharp
+using RagEval;
+using RagEval.Assertions;
+using RagEval.Models;
+using Xunit;
+
+public class RagQualityGate
+{
+    [Fact]
+    [Trait("Category", "RagQuality")]
+    public async Task Answers_stay_grounded_and_relevant()
+    {
+        var evaluator = new RagEvaluatorBuilder()
+            .UseAzureOpenAI(
+                endpoint: Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")!,
+                apiKey: Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY")!,
+                deploymentName: Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT")!)
+            .Build();
+
+        IReadOnlyList<RagEvaluationInput> goldenSet = LoadGoldenDataset();
+        IReadOnlyList<RagEvaluationResult> results = await evaluator.EvaluateBatchAsync(goldenSet);
+
+        results.Assert(
+            m => m.Faithfulness >= 0.8,
+            m => m.AnswerRelevance >= 0.7);
+        results.GetSummary().Assert(s => s.AvgContextPrecision >= 0.6);
+    }
+}
+```
+
+```yaml
+# .github/workflows/rag-quality.yml
+name: RAG quality gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  rag-eval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Evaluate RAG quality against the golden dataset
+        run: dotnet test --filter "Category=RagQuality" --logger "console;verbosity=detailed"
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+```
+
+When a metric slips below the bar, the build fails and the `RagEvalAssertionException` diff above
+is printed straight into the Actions log.
+
 ## Contributing
 
 Contributions are welcome.

@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PackageId>RagEval.Extensions.AI</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Authors>hpkhariprasad</Authors>
     <Description>
       Microsoft.Extensions.AI adapter for RagEval.NET — use any IChatClient as the evaluation judge,

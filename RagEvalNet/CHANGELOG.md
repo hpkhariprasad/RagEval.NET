@@ -5,7 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-07-10
 
 ### Added
 
@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `RagEvalJsonExport` document (`schemaVersion`, `generatedAt`, `summary`, `results`), and the
   CSV column set is versioned with an append-only guarantee. Current versions are exposed via
   `RagEvalExportSchema`.
+- Fluent threshold assertions for CI pipelines: `results.Assert(m => m.Faithfulness >= 0.8)`
+  and `summary.Assert(s => s.AvgFaithfulness >= 0.85)` (in `RagEval.Assertions`) throw a
+  `RagEvalAssertionException` whose message diffs each failed assertion against the actual
+  scores of every failing result. README gains a GitHub Actions "fail the build if RAG quality
+  regresses" example.
 
 ### Changed
 
